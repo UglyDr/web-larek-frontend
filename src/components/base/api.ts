@@ -8,7 +8,6 @@ export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
 export class Api {
     readonly baseUrl: string;
     protected options: RequestInit;
-
     constructor(baseUrl: string, options: RequestInit = {}) {
         this.baseUrl = baseUrl;
         this.options = {
@@ -18,25 +17,33 @@ export class Api {
             }
         };
     }
-
-    protected handleResponse(response: Response): Promise<object> {
-        if (response.ok) return response.json();
-        else return response.json()
-            .then(data => Promise.reject(data.error ?? response.statusText));
+    protected handleResponse<T>(response: Response): Promise<T> {
+        return response.json().then(data => {
+            if (response.ok) return data;
+            else return Promise.reject(data.error ?? response.statusText);
+        }).catch(error => {
+            return Promise.reject(response.statusText);
+        });
     }
-
-    get(uri: string) {
+    get<T>(uri: string): Promise<T> {
+        console.log(`Sending GET request to ${this.baseUrl + uri}`);
         return fetch(this.baseUrl + uri, {
             ...this.options,
             method: 'GET'
-        }).then(this.handleResponse);
+        }).then(response => this.handleResponse<T>(response)).catch(error => {
+            console.error(`GET request to ${this.baseUrl + uri} failed:, error`);
+            throw error;
+        });
     }
-
-    post(uri: string, data: object, method: ApiPostMethods = 'POST') {
+    post<T>(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<T> {
+        console.log(`Sending ${method} request to ${this.baseUrl + uri} with data:, data`);
         return fetch(this.baseUrl + uri, {
             ...this.options,
             method,
             body: JSON.stringify(data)
-        }).then(this.handleResponse);
+        }).then(response => this.handleResponse<T>(response)).catch(error => {
+            console.error(`${method} request to ${this.baseUrl + uri} failed:, error`);
+            throw error;
+        });
     }
 }
