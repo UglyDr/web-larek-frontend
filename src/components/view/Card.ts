@@ -1,10 +1,10 @@
-import { IEvents } from "../base/events";
-import { Component } from "./Component";
-import { cloneTemplate, ensureElement } from "../../utils/utils";
-import { ICard, ICardAction } from "../../types";
+import { IEvents } from '../base/events';
+import { Component } from './Component';
+import { cloneTemplate, ensureElement } from '../../utils/utils';
+import { ICard, ICardAction } from '../../types';
 
 export class Card extends Component<ICard> {
-    protected _id: string;
+	protected _id: string;
 	protected _title: HTMLHeadingElement;
 	protected _price: HTMLSpanElement;
 	protected _image: HTMLImageElement;
@@ -12,25 +12,32 @@ export class Card extends Component<ICard> {
 	protected _description: HTMLParagraphElement;
 	protected button: HTMLButtonElement;
 	protected _index: HTMLSpanElement;
+	protected _colors = <Record<string, string>>{
+		'софт-скил': 'soft',
+		другое: 'other',
+		дополнительное: 'additional',
+		кнопка: 'button',
+		'хард-скил': 'hard',
+	};
 
-    constructor(
-        protected template: HTMLTemplateElement,
+	constructor(
+		protected template: HTMLTemplateElement,
 		protected events: IEvents,
 		action?: ICardAction
-    ) {
-        super(cloneTemplate(template), events)
+	) {
+		super(cloneTemplate(template), events);
 
-        this._title = ensureElement<HTMLHeadingElement> (
-            '.card__title', 
-            this.container
-        );
+		this._title = ensureElement<HTMLHeadingElement>(
+			'.card__title',
+			this.container
+		);
 
-        this._price = ensureElement<HTMLSpanElement> (
-            '.card__price',
-            this.container
-        );
+		this._price = ensureElement<HTMLSpanElement>(
+			'.card__price',
+			this.container
+		);
 
-        this._category = this.container.querySelector(
+		this._category = this.container.querySelector(
 			'.card__category'
 		) as HTMLSpanElement;
 
@@ -57,30 +64,14 @@ export class Card extends Component<ICard> {
 				this.container.addEventListener('click', action.onClick);
 			}
 		}
+	}
 
+	set category(value: string) {
+		this.setText(this._category, value);
+		this._category.className = `card__category card__category_${this._colors[value]}`;
+	}
 
-    }
-
-    set category(category: string) {
-        const categoryClasses: { [key: string]: string } = {
-            'дополнительное': 'card__category_additional',
-            'софт-скил': 'card__category_soft',
-            'хард-скил': 'card__category_hard',
-            'другое': 'card__category_other',
-        };
-
-        Object.values(categoryClasses).forEach(className => {
-            this.toggleClass(this._category, className, false);
-        });
-
-    const className = categoryClasses[category.toLowerCase()] || 'card__category_other';
-
-    this.toggleClass(this._category, className, true);
-
-    this.setText(this._category, category);
-    }
-
-    set index(index: number) {
+	set index(index: number) {
 		this.setText(this._index, String(index));
 	}
 
@@ -105,9 +96,13 @@ export class Card extends Component<ICard> {
 	}
 
 	set inBasket(state: boolean) {
-		this.setText(
-			this.button,
-			state ? 'Удалить из корзины' : 'Добавить в корзину'
-		);
+		if (this._price.textContent === `Бесценно`) {
+			this.setText(this.button, 'Не для продажи');
+		} else {
+			this.setText(
+				this.button,
+				state ? 'Удалить из корзины' : 'Добавить в корзину'
+			);
+		}
 	}
 }
